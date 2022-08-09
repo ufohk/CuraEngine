@@ -691,5 +691,27 @@ std::string Settings::getWithoutLimiting(const std::string& key) const
         std::exit(2);
     }
 }
+std::string& Settings::get_(const std::string& key)
+{
+    auto value = settings.find(key);
+    if (value != settings.end())
+    {
+        return value->second;
+    }
+    const auto limit_to_extruder = Application::getInstance().current_slice->scene.limit_to_extruder;
+    auto value_ = limit_to_extruder.find(key);
+    if (value_ != limit_to_extruder.end())
+    {
+        return value->second;
+    }
+    if (parent != nullptr)
+    {
+        value = parent->settings.find(key);
+        if (value != parent->settings.end())
+        {
+            return value->second;
+        }
+    }
+}
 
 } // namespace cura

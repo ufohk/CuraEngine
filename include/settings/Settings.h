@@ -1,5 +1,5 @@
 // Copyright (c) 2022 Ultimaker B.V.
-// CuraEngine is released under the terms of the AGPLv3 or higher.
+// CuraEngine is released under the terms of the AGPLv3 or higher
 
 #ifndef SETTINGS_SETTINGS_H
 #define SETTINGS_SETTINGS_H
@@ -18,6 +18,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
+
 namespace cura
 {
 
@@ -33,6 +36,8 @@ namespace cura
 class Settings
 {
 public:
+    using value_type = std::unordered_map<std::string, std::string>;
+
     /*
      * \brief Properly initialises the Settings instance.
      */
@@ -64,7 +69,8 @@ public:
      * \param key The key of the setting to get.
      * \return The setting's value, cast to the desired type.
      */
-    template<typename A> A get(const std::string& key) const;
+    template<typename A>
+    A get(const std::string& key) const;
 
     /*!
      * \brief Get a string containing all settings in this container.
@@ -95,17 +101,39 @@ public:
      */
     void setParent(Settings* new_parent);
 
+    constexpr auto key_view()
+    {
+        return settings | ranges::views::keys;
+    }
+
+    std::string& get_(const std::string& key);
+
+    auto value_view()
+    {
+        auto get_parent_keys = [&]()
+        {
+            if (parent != nullptr)
+            {
+                return parent->key_view();
+            }
+            return key_view();
+        };
+        auto all_keys = get_parent_keys();
+        return all_keys | ranges::views::transform([&](const auto& key) { return get_(key); });
+    }
+
+protected:
+    /*!
+     * \brief A dictionary to map the setting keys to the actual setting values.
+     */
+    value_type settings;
+
 private:
     /*!
      * Optionally, a parent setting container to ask for the value of a setting
      * if this container has no value for it.
      */
     Settings* parent;
-
-    /*!
-     * \brief A dictionary to map the setting keys to the actual setting values.
-     */
-    std::unordered_map<std::string, std::string> settings;
 
     /*!
      * \brief Get the value of a setting, but without looking at the limiting to
@@ -119,7 +147,6 @@ private:
     std::string getWithoutLimiting(const std::string& key) const;
 };
 
-} //namespace cura
+} // namespace cura
 
-#endif //SETTINGS_SETTINGS_H
-
+#endif // SETTINGS_SETTINGS_H
