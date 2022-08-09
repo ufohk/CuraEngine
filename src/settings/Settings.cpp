@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string> //Parsing strings (stod, stoul).
 
+#include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
 #include "Application.h" //To get the extruders.
@@ -691,7 +692,8 @@ std::string Settings::getWithoutLimiting(const std::string& key) const
         std::exit(2);
     }
 }
-std::string& Settings::get_(const std::string& key)
+
+std::string& Settings::get_(StringLike auto& key)
 {
     auto value = settings.find(key);
     if (value != settings.end())
@@ -712,6 +714,17 @@ std::string& Settings::get_(const std::string& key)
             return value->second;
         }
     }
+}
+
+std::string Settings::toJSON()
+{
+    std::string json{ "{ " };
+    for (const auto& [key, value] : map_view())
+    {
+        json += fmt::format("\"{}\"={}, ", key, value);
+    }
+    json += " }";
+    return json;
 }
 
 } // namespace cura

@@ -20,6 +20,9 @@
 
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/transform.hpp>
+#include <range/v3/view/zip.hpp>
+
+#include <Concepts.h>
 
 namespace cura
 {
@@ -106,8 +109,6 @@ public:
         return settings | ranges::views::keys;
     }
 
-    std::string& get_(const std::string& key);
-
     auto value_view()
     {
         auto get_parent_keys = [&]()
@@ -121,6 +122,13 @@ public:
         auto all_keys = get_parent_keys();
         return all_keys | ranges::views::transform([&](const auto& key) { return get_(key); });
     }
+
+    auto map_view()
+    {
+        return ranges::views::zip(key_view(), value_view());
+    }
+
+    std::string toJSON();
 
 protected:
     /*!
@@ -145,6 +153,8 @@ private:
      * \return The setting's value.
      */
     std::string getWithoutLimiting(const std::string& key) const;
+
+    std::string& get_(StringLike auto& key);
 };
 
 } // namespace cura
