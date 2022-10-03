@@ -8,6 +8,11 @@
 
 #include <spdlog/spdlog.h>
 
+#include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/sliding.hpp>
+#include <range/v3/view/stride.hpp>
+#include <range/v3/view/take.hpp>
+
 #include "Application.h" //To get settings.
 #include "ExtruderTrain.h"
 #include "Slice.h"
@@ -25,15 +30,14 @@
 #include "utils/ThreadPool.h"
 #include "utils/math.h"
 
-namespace cura
-{
+namespace rv = ranges::views;
 
-bool AreaSupport::handleSupportModifierMesh(SliceDataStorage& storage, const Settings& mesh_settings, const Slicer* slicer)
-{
-    if (! mesh_settings.get<bool>("anti_overhang_mesh") && ! mesh_settings.get<bool>("support_mesh"))
-    {
-        return false;
-    }
+namespace cura {
+
+    bool AreaSupport::handleSupportModifierMesh(SliceDataStorage &storage, const Settings &mesh_settings, const Slicer *slicer) {
+        if (!mesh_settings.get<bool>("anti_overhang_mesh") && !mesh_settings.get<bool>("support_mesh")) {
+            return false;
+        }
     enum ModifierType
     {
         ANTI_OVERHANG,
@@ -1453,34 +1457,33 @@ void AreaSupport::generateSupportBottom(SliceDataStorage& storage, const SliceMe
 
 void AreaSupport::generateSupportRoof(SliceDataStorage& storage, const SliceMeshStorage& mesh, std::vector<Polygons>& global_support_areas_per_layer)
 {
-    const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-    const coord_t layer_height = mesh_group_settings.get<coord_t>("layer_height");
+    spdlog::debug("Generating Support Roof");
+    const Settings &mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
+    const auto layer_height = mesh_group_settings.get<coord_t>("layer_height");
     const size_t roof_layer_count = round_divide(mesh.settings.get<coord_t>("support_roof_height"), layer_height); // Number of layers in support roof.
-    if (roof_layer_count <= 0)
-    {
+    if (roof_layer_count <= 0) {
+        spdlog::debug("Support roof layer count less then 1, nothing to do");
         return;
     }
     const coord_t z_distance_top = round_up_divide(mesh.settings.get<coord_t>("support_top_distance"), layer_height); // Number of layers between support roof and model.
-    const size_t skip_layer_count = std::max(uint64_t(1), round_divide(mesh.settings.get<coord_t>("support_interface_skip_height"), layer_height)); // Resolution of generating support roof below model.
-    const coord_t roof_line_width = mesh_group_settings.get<ExtruderTrain&>("support_roof_extruder_nr").settings.get<coord_t>("support_roof_line_width");
-    const coord_t roof_outline_offset = mesh_group_settings.get<ExtruderTrain&>("support_roof_extruder_nr").settings.get<coord_t>("support_roof_offset");
+    const size_t skip_layer_count = std::max(static_cast<uint64_t>(1), round_divide(mesh.settings.get<coord_t>("support_interface_skip_height"),
+                                                                                    layer_height)); // Resolution of generating support roof below model.
+    const auto roof_line_width = mesh_group_settings.get<ExtruderTrain &>("support_roof_extruder_nr").settings.get<coord_t>("support_roof_line_width");
+    const auto roof_outline_offset = mesh_group_settings.get<ExtruderTrain &>("support_roof_extruder_nr").settings.get<coord_t>("support_roof_offset");
 
-    const size_t scan_count = std::max(size_t(1), (roof_layer_count - 1) / skip_layer_count); // How many measurements to take to generate roof areas.
-    const float z_skip = std::max(1.0f, float(roof_layer_count - 1) / float(scan_count)); // How many layers to skip between measurements. Using float for better spread, but this is later rounded.
-    const double minimum_roof_area = mesh.settings.get<double>("minimum_roof_area");
+    const size_t scan_count = std::max(static_cast<size_t>(1), (roof_layer_count - 1) / skip_layer_count); // How many measurements to take to generate roof areas.
+    const auto minimum_roof_area = mesh.settings.get<double>("minimum_roof_area");
 
-    std::vector<SupportLayer>& support_layers = storage.support.supportLayers;
-    for (LayerIndex layer_idx = 0; layer_idx < static_cast<int>(support_layers.size() - z_distance_top); layer_idx++)
-    {
-        const LayerIndex top_layer_idx_above = std::min(static_cast<LayerIndex>(support_layers.size() - 1), layer_idx + roof_layer_count + z_distance_top); // Maximum layer of the model that generates support roof.
+    auto &support_layers = storage.support.supportLayers;
+    for (const auto &[idx, layers]: mesh.layers | rv::take(support_layers.size() - z_distance_top) | rv::sliding(roof_layer_count + z_distance_top) | rv::stride(scan_count) |
+                                    rv::enumerate) {
         Polygons mesh_outlines;
-        for (float layer_idx_above = top_layer_idx_above; layer_idx_above > layer_idx + z_distance_top; layer_idx_above -= z_skip)
-        {
-            mesh_outlines.add(mesh.layers[std::round(layer_idx_above)].getOutlines());
+        for (const auto &layer: layers) {
+            mesh_outlines.add(layer.getOutlines());
         }
         Polygons roofs;
-        generateSupportInterfaceLayer(global_support_areas_per_layer[layer_idx], mesh_outlines, roof_line_width, roof_outline_offset, minimum_roof_area, roofs);
-        support_layers[layer_idx].support_roof.add(roofs);
+        generateSupportInterfaceLayer(global_support_areas_per_layer[idx], mesh_outlines, roof_line_width, roof_outline_offset, minimum_roof_area, roofs);
+        support_layers[idx].support_roof.add(roofs);
     }
 }
 
