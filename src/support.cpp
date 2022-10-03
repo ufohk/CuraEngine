@@ -1475,10 +1475,15 @@ void AreaSupport::generateSupportRoof(SliceDataStorage& storage, const SliceMesh
     const auto minimum_roof_area = mesh.settings.get<double>("minimum_roof_area");
 
     auto &support_layers = storage.support.supportLayers;
-    for (const auto &[idx, layers]: mesh.layers | rv::take(support_layers.size() - z_distance_top) | rv::sliding(roof_layer_count + z_distance_top) | rv::stride(scan_count) |
-                                    rv::enumerate) {
+    for (const auto &[idx, layers]: mesh.layers
+                                    | rv::take(support_layers.size() - z_distance_top)
+                                    | rv::sliding(roof_layer_count + z_distance_top)
+                                    | rv::stride(scan_count)
+                                    | rv::enumerate)
+    {
         Polygons mesh_outlines;
-        for (const auto &layer: layers) {
+        for (const auto &layer: layers)
+        {
             mesh_outlines.add(layer.getOutlines());
         }
         Polygons roofs;
