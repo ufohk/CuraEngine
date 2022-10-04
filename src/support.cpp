@@ -1476,7 +1476,7 @@ void AreaSupport::generateSupportRoof(SliceDataStorage& storage, const SliceMesh
 
     auto &support_layers = storage.support.supportLayers;
     for (const auto &[idx, layers] : mesh.layers
-                                   | rv::take(support_layers.size() - z_distance_top)
+                                   | rv::take(support_layers.size())
                                    | rv::sliding(roof_layer_count + z_distance_top)
                                    | rv::enumerate)
     {
