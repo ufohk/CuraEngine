@@ -666,7 +666,12 @@ void AreaSupport::generateSupportAreas(SliceDataStorage& storage)
     for (unsigned int layer_idx = 0; layer_idx < storage.print_layer_count; layer_idx++)
     {
         Polygons& support_areas = global_support_areas_per_layer[layer_idx];
-        support_areas = support_areas.unionPolygons();
+        if (layer_idx == 125 || layer_idx == 126)
+        {
+            AABB aabb(Point(100000, 50000), Point(250000, 200000));
+            SVG svg("support_areas_" + std::to_string(layer_idx) + ".svg", aabb);
+            svg.writePolygon(support_areas.front(), SVG::Color::GREEN, 0.1);
+        }
     }
 
     // handle support interface
@@ -913,6 +918,22 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
                                            Polygons xy_overhang_disallowed = mesh.overhang_areas[layer_idx].offset(z_distance_top * tan_angle);
                                            Polygons xy_non_overhang_disallowed = outlines.difference(mesh.overhang_areas[layer_idx].unionPolygons(larger_area_below).offset(xy_distance)).offset(xy_distance);
                                            xy_disallowed_per_layer[layer_idx] = xy_overhang_disallowed.unionPolygons(xy_non_overhang_disallowed.unionPolygons(outlines.offset(xy_distance_overhang)));
+
+                                           if (layer_idx == 125 || layer_idx == 126)
+                                           {
+                                               AABB aabb(Point(0, 0), Point(100000, 100000));
+                                               SVG svg("images/mesh_overhang_areas_" + std::to_string(layer_idx) +"_(blue)(offset black).svg", aabb);
+                                               svg.writePolygons(mesh.overhang_areas[layer_idx], SVG::Color::BLUE, 1.2);
+                                               svg.writePolygons(mesh.overhang_areas[layer_idx].offset(z_distance_top * tan_angle), SVG::Color::BLACK, 1.2);
+                                           }
+
+                                           if (layer_idx == 125 || layer_idx == 126)
+                                           {
+                                               AABB aabb(Point(0, 0), Point(100000, 100000));
+                                               SVG svg("images/layer_this_overhang_" + std::to_string(layer_idx) +"_(disallowed red)(non disallowed green).svg", aabb);
+                                               svg.writePolygons(xy_overhang_disallowed, SVG::Color::RED, 1.2);
+                                               svg.writePolygons(xy_non_overhang_disallowed, SVG::Color::GREEN, 0.8);
+                                           }
                                        }
                                    }
                                    if (is_support_mesh_place_holder || ! use_xy_distance_overhang)
@@ -1050,6 +1071,30 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
 
         support_areas[layer_idx] = layer_this;
         Progress::messageProgress(Progress::Stage::SUPPORT, layer_count * (mesh_idx + 1) - layer_idx, layer_count * storage.meshes.size());
+    }
+
+    {
+        AABB aabb(Point(0, 0), Point(100000, 100000));
+        SVG svg("images/layer_this_125_(green)(disallowed red)(difference black).svg", aabb);
+        Polygons& layer_this = support_areas[125];
+        Polygons& layer_this_disallowed = xy_disallowed_per_layer[125];
+        Polygons layer_this_difference = layer_this.difference(layer_this_disallowed);
+
+        svg.writePolygons(layer_this, SVG::Color::GREEN, 1.2);
+        svg.writePolygons(layer_this_disallowed, SVG::Color::RED, 0.8);
+        svg.writePolygons(layer_this_difference, SVG::Color::BLACK, 0.3);
+    }
+
+    {
+        AABB aabb(Point(0, 0), Point(100000, 100000));
+        SVG svg("images/layer_this_126_(green)(disallowed red)(difference black).svg", aabb);
+        Polygons& layer_this = support_areas[126];
+        Polygons& layer_this_disallowed = xy_disallowed_per_layer[126];
+        Polygons layer_this_difference = layer_this.difference(layer_this_disallowed);
+
+        svg.writePolygons(layer_this, SVG::Color::GREEN, 1.2);
+        svg.writePolygons(layer_this_disallowed, SVG::Color::RED, 0.8);
+        svg.writePolygons(layer_this_difference, SVG::Color::BLACK, 0.3);
     }
 
     // Substract x/y-disallowed area from the support.
@@ -1280,6 +1325,28 @@ std::pair<Polygons, Polygons> AreaSupport::computeBasicAndFullOverhang(const Sli
 
     Polygons overhang_extented = basic_overhang.offset(max_dist_from_lower_layer + MM2INT(0.1)); // +0.1mm for easier joining with support from layer above
     Polygons full_overhang = overhang_extented.intersection(supportLayer_supportee);
+
+    if (layer_idx == 125 || layer_idx == 126)
+    {
+        AABB aabb(Point(0, 0), Point(100000, 100000));
+        SVG svg("images/compute_overhang_" + std::to_string(layer_idx) +"_supporte(e green)(r red)(d black).svg", aabb);
+        svg.writePolygons(supportLayer_supportee, SVG::Color::GREEN, 1.2);
+        svg.writePolygons(supportLayer_supporter, SVG::Color::RED, 0.8);
+        svg.writePolygons(supportLayer_supported, SVG::Color::BLACK, 0.5);
+        SVG svg2("images/compute_overhang_" + std::to_string(layer_idx) + "_basic(blue)_full(magenta).svg", aabb);
+        svg2.writePolygons(basic_overhang, SVG::Color::BLUE, 1.2);
+        svg2.writePolygons(full_overhang, SVG::Color::MAGENTA, 0.8);
+
+        //No anti overhang on this layer
+        SVG svg3("images/compute_overhang_" + std::to_string(layer_idx) + "_antioverhang(red).svg", aabb);
+        svg3.writePolygons(support_layer.anti_overhang, SVG::Color::RED, 1.0);
+
+        SVG svg4("images/compute_overhang_" + std::to_string(layer_idx) + "_supportLayer_supported_supportee_basic_overhang.svg", aabb);
+        svg2.writePolygons(basic_overhang, SVG::Color::BLACK, 1.2);
+        svg.writePolygons(supportLayer_supportee, SVG::Color::GREEN, 1.0);
+        svg.writePolygons(supportLayer_supported, SVG::Color::RED, 0.8);
+
+    }
     return std::make_pair(basic_overhang, full_overhang);
 }
 
