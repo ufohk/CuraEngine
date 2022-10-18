@@ -9,6 +9,10 @@
 
 #include <iterator>
 
+#include <range/v3/algorithm/max.hpp>
+#include <range/v3/algorithm/max_element.hpp>
+#include <range/v3/view/transform.hpp>
+
 namespace cura
 {
 
@@ -179,21 +183,17 @@ std::unordered_set<std::pair<const ExtrusionLine*, const ExtrusionLine*>> InsetO
     //  /            .
     // However, because of how Arachne works this will likely never be the case for two consecutive insets.
     // On the other hand one could imagine that two consecutive insets of a very large circle
-    // could be simplify()ed such that the remaining vertices of the two insets don't align.
+    // could be simplified such that the remaining vertices of the two insets don't align.
     // In those cases the order requirement is not captured,
     // which means that the PathOrderOptimizer *might* result in a violation of the user set path order.
     // This problem is expected to be not so severe and happen very sparsely.
 
-    coord_t max_line_w = 0u;
-    for (const ExtrusionLine* line : input)
-    { // compute max_line_w
-        for (const ExtrusionJunction& junction : *line)
-        {
-            max_line_w = std::max(max_line_w, junction.w);
-        }
-    }
+    // Determine the max used junction width
+    const auto max_line_w = ranges::max(input | ranges::views::transform([](const auto& line){ return ranges::max_element(*line, {}, &ExtrusionJunction::w)->w; }));
     if (max_line_w == 0u)
+    {
         return order_requirements;
+    }
 
     struct LineLoc
     {
@@ -273,6 +273,7 @@ std::unordered_set<std::pair<const ExtrusionLine*, const ExtrusionLine*>> InsetO
 
 std::unordered_set<std::pair<const ExtrusionLine*, const ExtrusionLine*>> InsetOrderOptimizer::getInsetOrder(const std::vector<const ExtrusionLine*>& input, const bool outer_to_inner)
 {
+    spdlog::debug("Determine order for the insets");
     std::unordered_set<std::pair<const ExtrusionLine*, const ExtrusionLine*>> order;
 
     std::vector<std::vector<const ExtrusionLine*>> walls_by_inset;
