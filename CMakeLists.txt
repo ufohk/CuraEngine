@@ -137,6 +137,8 @@ set(engine_SRCS # Except main.cpp.
         src/utils/ThreadPool.cpp
         src/utils/ToolpathVisualizer.cpp
         src/utils/VoronoiUtils.cpp
+
+        src/polygon/Point.cpp
         )
 
 add_library(_CuraEngine STATIC ${engine_SRCS} ${engine_PB_SRCS})
@@ -180,12 +182,14 @@ if (ENABLE_ARCUS)
 endif ()
 
 find_package(clipper REQUIRED)
-find_package(RapidJSON REQUIRED)
+find_package(rapidjson REQUIRED)
 find_package(stb REQUIRED)
 find_package(Boost REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
 find_package(range-v3 REQUIRED)
+find_package(mp-units REQUIRED)
+find_package(gsl-lite REQUIRED)
 
 if (ENABLE_TESTING)
     find_package(GTest REQUIRED)
@@ -194,13 +198,15 @@ endif ()
 target_link_libraries(_CuraEngine
         PUBLIC
         spdlog::spdlog
+        mp-units::mp-units
         PRIVATE
         range-v3::range-v3
         fmt::fmt
         clipper::clipper
-        rapidjson
+        rapidjson::rapidjson
         stb::stb
         boost::boost
+        gsl::gsl-lite
         $<$<BOOL:${ENABLE_TESTING}>:GTest::gtest>)
 
 if (NOT WIN32)

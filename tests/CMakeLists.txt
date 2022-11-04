@@ -39,6 +39,10 @@ set(TESTS_SRC_UTILS
         UnionFindTest
         )
 
+set(TESTS_SRC_POLYGON
+        PointTest
+        )
+
 set(TESTS_HELPERS_SRC ReadTestPolygons.cpp)
 
 set(TESTS_SRC_ARCUS)
@@ -59,6 +63,12 @@ endif ()
 
 foreach (test ${TESTS_SRC_BASE})
     add_executable(${test} main.cpp ${test}.cpp)
+    add_test(NAME ${test} COMMAND "${test}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(${test} PRIVATE _CuraEngine test_helpers GTest::gtest GTest::gmock clipper::clipper)
+endforeach ()
+
+foreach (test ${TESTS_SRC_POLYGON})
+    add_executable(${test} main.cpp polygon/${test}.cpp)
     add_test(NAME ${test} COMMAND "${test}" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
     target_link_libraries(${test} PRIVATE _CuraEngine test_helpers GTest::gtest GTest::gmock clipper::clipper)
 endforeach ()
