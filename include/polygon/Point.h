@@ -19,6 +19,13 @@
 namespace cura::poly
 {
 
+enum struct Axis
+{
+    X = 0,
+    Y = 1,
+    Z = 2
+};
+
 template<class Tp, std::size_t Nm = 2> // TODO: figure out how to set a max size (of 3 x,y,z)
 class Point
 {
@@ -140,8 +147,13 @@ public:
     // Element access.
     [[nodiscard]] constexpr reference operator[](size_type idx) noexcept
     {
-        gsl_Expects(idx < Nm);
+        gsl_Expects(idx < size());
         return data_[idx];
+    }
+
+    [[nodiscard]] constexpr reference operator[](const Axis& axis) noexcept
+    {
+        return data_[static_cast<size_type>(axis)];
     }
 
     [[nodiscard]] constexpr const_reference operator[](size_type idx) const noexcept
@@ -150,16 +162,31 @@ public:
         return data_[idx];
     }
 
+    [[nodiscard]] constexpr const_reference operator[](const Axis& axis) const noexcept
+    {
+        return data_[static_cast<size_type>(axis)];
+    }
+
     [[nodiscard]] constexpr reference at(size_type idx)
     {
         gsl_Expects(idx < Nm);
         return data_.at(idx);
     }
 
+    [[nodiscard]] constexpr reference at(const Axis& axis)
+    {
+        return data_.at(static_cast<size_type>(axis));
+    }
+
     [[nodiscard]] constexpr const_reference at(size_type idx) const
     {
         gsl_Expects(idx < Nm);
         return data_.at(idx);
+    }
+
+    [[nodiscard]] constexpr const_reference at(const Axis& axis) const
+    {
+        return data_.at(static_cast<size_type>(axis));
     }
 
     [[nodiscard]] constexpr reference front() noexcept
