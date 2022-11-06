@@ -40,10 +40,14 @@ public:
     constexpr explicit Point(Ts&&... args) noexcept : data_{ std::forward<Ts>(args)... }
     {
     }
-
-    constexpr explicit Point(ranges::any_view<Tp> rng) noexcept : data_{ ranges::begin(rng), ranges::end(rng) }
-    {
-    }
+    //
+    //    constexpr explicit Point(ranges::any_view<Tp> rng) noexcept
+    //    {
+    //        for (const auto& [idx, point] : rng | ranges::views::enumerate)
+    //        {
+    //            data_[idx] = point;
+    //        }
+    //    }
 
 
     constexpr void fill(const value_type& value)
@@ -191,7 +195,13 @@ public:
     // Arithmetic operations
     [[nodiscard]] constexpr Point operator+(const Vector auto& other) const
     {
-        return { ranges::views::zip_with([](const auto& lhs, const auto& rhs) { return lhs + rhs; }, *this, other) };
+        // FIXME: initialize Point with a rng
+        Point<Tp, Nm> p;
+        for (const auto& [idx, point] : ranges::views::zip_with([](const auto& lhs, const auto& rhs) { return lhs + rhs; }, *this, other) | ranges::views::enumerate)
+        {
+            p[idx] = point;
+        }
+        return p;
     }
 
     [[nodiscard]] constexpr Point operator+(const Scalar auto& magnitude) const

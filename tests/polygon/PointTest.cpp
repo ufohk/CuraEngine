@@ -12,7 +12,7 @@ using namespace cura;
 
 TEST(PointTest, ctad)
 {
-    auto point_2d = poly::Point{ 1, 2 };
+    auto point_2d = poly::Point{ 1e15, 2e15 };
     EXPECT_TRUE(point_2d.max_size() == 2);
     EXPECT_TRUE(sizeof(decltype(point_2d)::value_type) >= sizeof(std::int64_t));
 
