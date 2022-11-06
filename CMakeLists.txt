@@ -141,7 +141,7 @@ set(engine_SRCS # Except main.cpp.
         src/polygon/Point.cpp
         )
 
-add_library(_CuraEngine STATIC ${engine_SRCS} ${engine_PB_SRCS})
+add_library(_CuraEngine STATIC ${engine_SRCS} ${engine_PB_SRCS} include/polygon/Point.h)
 use_threads(_CuraEngine)
 
 target_include_directories(_CuraEngine
@@ -199,7 +199,6 @@ target_link_libraries(_CuraEngine
         PUBLIC
         spdlog::spdlog
         mp-units::mp-units
-        PRIVATE
         range-v3::range-v3
         fmt::fmt
         clipper::clipper
