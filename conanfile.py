@@ -88,6 +88,9 @@ class CuraEngineConan(ConanFile):
         self.requires("standardprojectsettings/[>=0.1.0]@ultimaker/stable")
         for req in self._um_data()["requirements"]:
             self.requires(req)
+        if self.options.enable_visual_debug:
+            for req in self._um_data()["requirements_visual_debug"]:
+                self.requires(req)
         if self.options.enable_arcus:
             for req in self._um_data()["requirements_arcus"]:
                 self.requires(req)
