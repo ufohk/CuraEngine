@@ -4,6 +4,11 @@
 cmake_policy(SET CMP0091 NEW)  # For MSVC flags, will be ignored on non-Windows OS's
 cmake_minimum_required(VERSION 3.20)
 project(CuraEngine)
+if (WIN32)
+    # MSVC needs this to actually report the right value when using the __cplusplus predefinition macro.
+    # See here for details: https://learn.microsoft.com/en-us/cpp/build/reference/zc-cplusplus
+    add_compile_options(/Zc:__cplusplus)
+endif()
 find_package(standardprojectsettings REQUIRED)  # imports the cmake module https://github.com/Ultimaker/conan-ultimaker-index/recipes/standardprojectsettings
 AssureOutOfSourceBuilds()
 
