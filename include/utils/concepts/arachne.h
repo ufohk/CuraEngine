@@ -16,10 +16,16 @@ template<class T>
 concept storable_data =requires(T val) { val.data; };
 
 template<class T>
-concept st_edges_viewable = std::ranges::range<T> && storable_data<typename T::value_type>;
+concept st_edge = requires(T val) { val.from; val.to; };
 
 template<class T>
-concept st_nodes_viewable = std::ranges::range<T> && storable_data<typename T::value_type>;
+concept st_node = requires(T val) { val.p; };
+
+template<class T>
+concept st_edges_viewable = std::ranges::range<T> && storable_data<typename T::value_type> && st_edge<typename T::value_type>;
+
+template<class T>
+concept st_nodes_viewable = std::ranges::range<T> && storable_data<typename T::value_type> && st_node<typename T::value_type>;
 
 template<class T>
 concept st_graph = requires(T graph)
