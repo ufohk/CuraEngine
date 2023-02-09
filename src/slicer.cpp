@@ -797,7 +797,7 @@ Slicer::Slicer(Mesh* i_mesh, const coord_t thickness, const size_t slice_layer_c
 
 #ifdef VISUAL_DEBUG
     spdlog::debug("Visual Debugger: Initializing layer_map");
-    debug::Loggers::get_mutable_instance().setAll( layers | ranges::views::transform([]( const auto& layer ) { return static_cast<double>( layer.z ); }) | ranges::views::enumerate | ranges::to<debug::layer_map_t> );
+    debug::Loggers().setAll( layers | ranges::views::transform([]( const auto& layer ) { return static_cast<double>( layer.z ); }) | ranges::views::enumerate | ranges::to<debug::layer_map_t> );
 #endif
 
     std::vector<std::pair<int32_t, int32_t>> zbbox = buildZHeightsForFaces(*mesh);
@@ -807,7 +807,7 @@ Slicer::Slicer(Mesh* i_mesh, const coord_t thickness, const size_t slice_layer_c
     spdlog::info("Slice of mesh took {:.3} [s]", slice_timer.restart());
 
     makePolygons(*i_mesh, slicing_tolerance, layers);
-    auto vlogger = debug::Loggers::get_mutable_instance().Logger("sliced_polygons_0" );
+    auto vlogger = debug::Loggers().Logger("sliced_polygons_0" );
     vlogger->log(layers, debug::SectionType::NA);
     spdlog::info("Make polygons took {:.3} [s]", slice_timer.restart());
 }

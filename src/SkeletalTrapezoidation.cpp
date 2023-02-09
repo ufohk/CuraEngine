@@ -381,7 +381,7 @@ SkeletalTrapezoidation::SkeletalTrapezoidation(const Polygons& polys,
 
 void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
 {
-    auto vlogger_polys = debug::Loggers::get_mutable_instance().Logger( "ST_polys" );
+    auto vlogger_polys = debug::Loggers().Logger( "ST_polys" );
     vlogger_polys->log( polys, layer_idx, section_type,
                         debug::CellVisualDataInfo { "area", []( const auto& val ) { return ClipperLib::Area(val); } });
     vd_edge_to_he_edge.clear();
@@ -508,7 +508,7 @@ void SkeletalTrapezoidation::generateToolpaths(std::vector<VariableWidthLines>& 
 {
     p_generated_toolpaths = &generated_toolpaths;
 
-    auto vlogger_st_graph_0 = debug::Loggers::get_mutable_instance().Logger( "ST_graph_0" );
+    auto vlogger_st_graph_0 = debug::Loggers().Logger( "ST_graph_0" );
     vlogger_st_graph_0->log( graph.edges,
                            layer_idx,
                            section_type,
@@ -518,7 +518,7 @@ void SkeletalTrapezoidation::generateToolpaths(std::vector<VariableWidthLines>& 
 
     updateIsCentral();
 
-    auto vlogger_st_graph_1 = debug::Loggers::get_mutable_instance().Logger( "ST_graph_1" );
+    auto vlogger_st_graph_1 = debug::Loggers().Logger( "ST_graph_1" );
     vlogger_st_graph_1->log( graph.edges,
                              layer_idx,
                              section_type,
@@ -528,7 +528,7 @@ void SkeletalTrapezoidation::generateToolpaths(std::vector<VariableWidthLines>& 
 
     filterCentral(central_filter_dist);
 
-    auto vlogger_st_graph_2 = debug::Loggers::get_mutable_instance().Logger( "ST_graph_2" );
+    auto vlogger_st_graph_2 = debug::Loggers().Logger( "ST_graph_2" );
     vlogger_st_graph_2->log( graph.edges,
                              layer_idx,
                              section_type,
@@ -543,7 +543,7 @@ void SkeletalTrapezoidation::generateToolpaths(std::vector<VariableWidthLines>& 
 
     updateBeadCount();
 
-    auto vlogger_st_graph_3 = debug::Loggers::get_mutable_instance().Logger( "ST_graph_3" );
+    auto vlogger_st_graph_3 = debug::Loggers().Logger( "ST_graph_3" );
     vlogger_st_graph_3->log( graph.edges,
                              layer_idx,
                              section_type,
@@ -553,7 +553,7 @@ void SkeletalTrapezoidation::generateToolpaths(std::vector<VariableWidthLines>& 
 
     filterNoncentralRegions();
 
-    auto vlogger_st_graph_4 = debug::Loggers::get_mutable_instance().Logger( "ST_graph_4" );
+    auto vlogger_st_graph_4 = debug::Loggers().Logger( "ST_graph_4" );
     vlogger_st_graph_4->log( graph.edges,
                              layer_idx,
                              section_type,
@@ -563,7 +563,7 @@ void SkeletalTrapezoidation::generateToolpaths(std::vector<VariableWidthLines>& 
 
     generateTransitioningRibs();
 
-    auto vlogger_st_graph_5 = debug::Loggers::get_mutable_instance().Logger( "ST_graph_5" );
+    auto vlogger_st_graph_5 = debug::Loggers().Logger( "ST_graph_5" );
     vlogger_st_graph_5->log( graph.edges,
                              layer_idx,
                              section_type,
@@ -573,7 +573,7 @@ void SkeletalTrapezoidation::generateToolpaths(std::vector<VariableWidthLines>& 
 
     generateExtraRibs();
 
-    auto vlogger_st_graph_6 = debug::Loggers::get_mutable_instance().Logger( "ST_graph_6" );
+    auto vlogger_st_graph_6 = debug::Loggers().Logger( "ST_graph_6" );
     vlogger_st_graph_6->log( graph.edges,
                              layer_idx,
                              section_type,
@@ -583,7 +583,7 @@ void SkeletalTrapezoidation::generateToolpaths(std::vector<VariableWidthLines>& 
 
     generateSegments();
 
-    auto vlogger_st_graph_7 = debug::Loggers::get_mutable_instance().Logger( "ST_graph_7" );
+    auto vlogger_st_graph_7 = debug::Loggers().Logger( "ST_graph_7" );
     vlogger_st_graph_7->log( graph.edges,
                            layer_idx,
                            section_type,

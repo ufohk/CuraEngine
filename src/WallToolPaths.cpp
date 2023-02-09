@@ -129,7 +129,7 @@ const std::vector<VariableWidthLines>& WallToolPaths::generate()
     );
     wall_maker.generateToolpaths(toolpaths);
     {
-        auto vlogger = debug::Loggers::get_mutable_instance().Logger("toolpaths_1");
+        auto vlogger = debug::Loggers().Logger("toolpaths_1");
         vlogger->log(toolpaths, layer_idx, section_type,
                      debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
                      debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
@@ -142,7 +142,7 @@ const std::vector<VariableWidthLines>& WallToolPaths::generate()
     stitchToolPaths(toolpaths, settings);
 
     {
-        auto vlogger = debug::Loggers::get_mutable_instance().Logger("toolpaths_2");
+        auto vlogger = debug::Loggers().Logger("toolpaths_2");
         vlogger->log(toolpaths, layer_idx, section_type,
                      debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
                      debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
@@ -155,7 +155,7 @@ const std::vector<VariableWidthLines>& WallToolPaths::generate()
     removeSmallLines(toolpaths);
 
     {
-        auto vlogger = debug::Loggers::get_mutable_instance().Logger("toolpaths_3");
+        auto vlogger = debug::Loggers().Logger("toolpaths_3");
         vlogger->log(toolpaths, layer_idx, section_type,
                      debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
                      debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
@@ -168,7 +168,7 @@ const std::vector<VariableWidthLines>& WallToolPaths::generate()
     simplifyToolPaths(toolpaths, settings);
 
     {
-        auto vlogger = debug::Loggers::get_mutable_instance().Logger("toolpaths_4");
+        auto vlogger = debug::Loggers().Logger("toolpaths_4");
         vlogger->log(toolpaths, layer_idx, section_type,
                      debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
                      debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
@@ -181,7 +181,7 @@ const std::vector<VariableWidthLines>& WallToolPaths::generate()
     separateOutInnerContour();
 
     {
-        auto vlogger = debug::Loggers::get_mutable_instance().Logger("toolpaths_4");
+        auto vlogger = debug::Loggers().Logger("toolpaths_5");
         vlogger->log(toolpaths, layer_idx, section_type,
                      debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
                      debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },

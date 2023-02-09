@@ -9,7 +9,6 @@
 #include <memory>
 #include <mutex>
 
-#include <boost/serialization/singleton.hpp>
 #include <fmt/chrono.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/details/os.h>
@@ -61,7 +60,8 @@ private:
         return Get( id );
     };
 
-public:    /**
+public:
+    /**
      * Get the visual logger or lazily create a new Logger if it didn't exist yet
      * @tparam Args
      * @param id
@@ -111,7 +111,11 @@ private:
 };
 } // namespace details
 
-using Loggers = boost::serialization::singleton<details::LoggersImpl>; //<! Visual Logger registry
+inline auto& Loggers()
+{
+    static details::LoggersImpl singleton_;
+    return singleton_;
+}
 
 } // namespace cura::debug
 
