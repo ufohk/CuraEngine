@@ -129,55 +129,55 @@ const std::vector<VariableWidthLines>& WallToolPaths::generate()
         section_type
     );
     wall_maker.generateToolpaths(toolpaths);
-    {
-        auto vlogger = debug::Loggers().Logger("toolpaths_1");
-        vlogger->log(toolpaths, layer_idx, section_type,
-                     debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
-                     debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
-                     debug::CellVisualDataInfo{ "inset_idx", [](const auto& val){ return val.inset_idx; } },
-                     debug::PointVisualDataInfo{ "width", [](const auto& val){ return val.w; } },
-                     debug::PointVisualDataInfo{ "perimeter_index", [](const auto& val){ return val.perimeter_index; } }
-                     );
-    }
+//    {
+//        auto vlogger = debug::Loggers().Logger("toolpaths_1");
+//        vlogger->log(toolpaths, layer_idx, section_type,
+//                     debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
+//                     debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
+//                     debug::CellVisualDataInfo{ "inset_idx", [](const auto& val){ return val.inset_idx; } },
+//                     debug::PointVisualDataInfo{ "width", [](const auto& val){ return val.w; } },
+//                     debug::PointVisualDataInfo{ "perimeter_index", [](const auto& val){ return val.perimeter_index; } }
+//                     );
+//    }
 
     stitchToolPaths(toolpaths, settings);
 
-    {
-        auto vlogger = debug::Loggers().Logger("toolpaths_2");
-        vlogger->log(toolpaths, layer_idx, section_type,
-                     debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
-                     debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
-                     debug::CellVisualDataInfo{ "inset_idx", [](const auto& val){ return val.inset_idx; } },
-                     debug::PointVisualDataInfo{ "width", [](const auto& val){ return val.w; } },
-                     debug::PointVisualDataInfo{ "perimeter_index", [](const auto& val){ return val.perimeter_index; } }
-        );
-    }
+//    {
+//        auto vlogger = debug::Loggers().Logger("toolpaths_2");
+//        vlogger->log(toolpaths, layer_idx, section_type,
+//                     debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
+//                     debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
+//                     debug::CellVisualDataInfo{ "inset_idx", [](const auto& val){ return val.inset_idx; } },
+//                     debug::PointVisualDataInfo{ "width", [](const auto& val){ return val.w; } },
+//                     debug::PointVisualDataInfo{ "perimeter_index", [](const auto& val){ return val.perimeter_index; } }
+//        );
+//    }
     
     removeSmallLines(toolpaths);
 
-    {
-        auto vlogger = debug::Loggers().Logger("toolpaths_3");
-        vlogger->log(toolpaths, layer_idx, section_type,
-                     debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
-                     debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
-                     debug::CellVisualDataInfo{ "inset_idx", [](const auto& val){ return val.inset_idx; } },
-                     debug::PointVisualDataInfo{ "width", [](const auto& val){ return val.w; } },
-                     debug::PointVisualDataInfo{ "perimeter_index", [](const auto& val){ return val.perimeter_index; } }
-        );
-    }
+//    {
+//        auto vlogger = debug::Loggers().Logger("toolpaths_3");
+//        vlogger->log(toolpaths, layer_idx, section_type,
+//                     debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
+//                     debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
+//                     debug::CellVisualDataInfo{ "inset_idx", [](const auto& val){ return val.inset_idx; } },
+//                     debug::PointVisualDataInfo{ "width", [](const auto& val){ return val.w; } },
+//                     debug::PointVisualDataInfo{ "perimeter_index", [](const auto& val){ return val.perimeter_index; } }
+//        );
+//    }
 
     simplifyToolPaths(toolpaths, settings);
 
-    {
-        auto vlogger = debug::Loggers().Logger("toolpaths_4");
-        vlogger->log(toolpaths, layer_idx, section_type,
-                     debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
-                     debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
-                     debug::CellVisualDataInfo{ "inset_idx", [](const auto& val){ return val.inset_idx; } },
-                     debug::PointVisualDataInfo{ "width", [](const auto& val){ return val.w; } },
-                     debug::PointVisualDataInfo{ "perimeter_index", [](const auto& val){ return val.perimeter_index; } }
-        );
-    }
+//    {
+//        auto vlogger = debug::Loggers().Logger("toolpaths_4");
+//        vlogger->log(toolpaths, layer_idx, section_type,
+//                     debug::CellVisualDataInfo{ "is_closed", [](const auto& val){ return val.is_closed; } },
+//                     debug::CellVisualDataInfo{ "is_odd", [](const auto& val){ return val.is_odd; } },
+//                     debug::CellVisualDataInfo{ "inset_idx", [](const auto& val){ return val.inset_idx; } },
+//                     debug::PointVisualDataInfo{ "width", [](const auto& val){ return val.w; } },
+//                     debug::PointVisualDataInfo{ "perimeter_index", [](const auto& val){ return val.perimeter_index; } }
+//        );
+//    }
 
     separateOutInnerContour();
 

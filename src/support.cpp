@@ -30,6 +30,8 @@
 #include "utils/ThreadPool.h"
 #include "utils/math.h"
 
+#include "utils/visual_debug/logger.h"
+
 namespace cura
 {
 
@@ -437,7 +439,7 @@ void AreaSupport::cleanup(SliceDataStorage& storage)
     }
 }
 
-Polygons AreaSupport::join(const SliceDataStorage& storage, const Polygons& supportLayer_up, Polygons& supportLayer_this, const coord_t smoothing_distance)
+Polygons AreaSupport::join(const SliceDataStorage& storage, const Polygons& supportLayer_up, Polygons& supportLayer_this, const coord_t smoothing_distance, const coord_t layer_idx, const coord_t mesh_idx)
 {
     Polygons joined;
 
@@ -542,11 +544,19 @@ Polygons AreaSupport::join(const SliceDataStorage& storage, const Polygons& supp
     {
         joined = supportLayer_this.unionPolygons(supportLayer_up);
     }
+    {
+        auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_joined_0", mesh_idx));
+        vlogger->log(joined, layer_idx, debug::SectionType::SUPPORT);
+    }
     // join different parts
     const coord_t join_distance = infill_settings.get<coord_t>("support_join_distance");
     if (join_distance > 0)
     {
         joined = joined.offset(join_distance).offset(-join_distance);
+    }
+    {
+        auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_joined_1", mesh_idx));
+        vlogger->log(joined, layer_idx, debug::SectionType::SUPPORT);
     }
 
     // remove jagged line pieces introduced by unioning separate overhang areas for consectuive layers
@@ -575,6 +585,10 @@ Polygons AreaSupport::join(const SliceDataStorage& storage, const Polygons& supp
     // dist_from_lower_layer may be up to max_dist_from_lower_layer (see below), but that value may be extremely high
     const AngleDegrees max_smoothing_angle = 135; // maximum angle of inner corners to be smoothed
     joined = joined.smooth_outward(max_smoothing_angle, smoothing_distance);
+    {
+        auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_joined_3", mesh_idx));
+        vlogger->log(joined, layer_idx, debug::SectionType::SUPPORT);
+    }
 
     return joined;
 }
@@ -865,9 +879,13 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
                                [&](const size_t layer_idx)
                                {
                                    const Polygons outlines = storage.getLayerOutlines(layer_idx, no_support, no_prime_tower);
+                                   {
+                                       auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_outlines", mesh_idx));
+                                       vlogger->log(outlines, layer_idx, debug::SectionType::SUPPORT);
+                                   }
 
                                    // Build sloped areas. We need this for the stair-stepping later on.
-                                   // Specifically, sloped areass are used in 'moveUpFromModel' to prevent a stair step happening over an area where there isn't a slope.
+                                   // Specifically, sloped areas are used in 'moveUpFromModel' to prevent a stair step happening over an area where there isn't a slope.
                                    // This part here only concerns the slope between two layers. This will be post-processed later on (see the other parallel loop below).
                                    sloped_areas_per_layer[layer_idx] =
                                        // Take the outer areas of the previous layer, where the outer areas are (mostly) just _inside_ the shape.
@@ -881,6 +899,10 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
                                            .offset(-10)
                                            .offset(10 + sloped_area_detection_width);
                                    // The sloped areas are now ready to be post-processed.
+                                   {
+                                       auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_sloped_areas_per_layer_0", mesh_idx));
+                                       vlogger->log(sloped_areas_per_layer[layer_idx], layer_idx, debug::SectionType::SUPPORT);
+                                   }
 
                                    if (! is_support_mesh_place_holder)
                                    { // don't compute overhang for support meshes
@@ -894,7 +916,10 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
                                            {
                                                // shrink a little so that areas that only protrude very slightly are ignored
                                                larger_area_below = mesh.layers[layer_idx - 1].getOutlines().difference(mesh.layers[layer_idx].getOutlines()).offset(-layer_thickness / 10);
-
+                                               {
+                                                   auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_larger_area_below_0", mesh_idx));
+                                                   vlogger->log(larger_area_below, layer_idx, debug::SectionType::SUPPORT);
+                                               }
                                                if (! larger_area_below.empty())
                                                {
                                                    // if the layer below protrudes sufficiently such that a normal support at xy_distance could be placed there,
@@ -906,7 +931,10 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
 
                                                    // area_beyond_limit is the portion of the layer below's outline that lies further away from the current layer's outline than limit_distance
                                                    Polygons area_beyond_limit = mesh.layers[layer_idx - 1].getOutlines().difference(mesh.layers[layer_idx].getOutlines().offset(limit_distance));
-
+                                                   {
+                                                       auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_area_beyond_limit", mesh_idx));
+                                                       vlogger->log(area_beyond_limit, layer_idx, debug::SectionType::SUPPORT);
+                                                   }
                                                    if (!area_beyond_limit.empty())
                                                    {
                                                        // expand area_beyond_limit so that the inner hole fills in all the way back to the current layer's outline
@@ -914,18 +942,38 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
                                                        // wide enough for a normal support to be placed there
                                                        larger_area_below = larger_area_below.difference(area_beyond_limit.offset(limit_distance + 10));
                                                    }
+                                                   {
+                                                       auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_larger_area_below_1", mesh_idx));
+                                                       vlogger->log(larger_area_below, layer_idx, debug::SectionType::SUPPORT);
+                                                   }
                                                }
                                            }
 
                                            // Compute the areas that are too close to the model.
                                            Polygons xy_overhang_disallowed = mesh.overhang_areas[layer_idx].offset(z_distance_top * tan_angle);
+                                           {
+                                               auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_xy_overhang_disallowed", mesh_idx));
+                                               vlogger->log(xy_overhang_disallowed, layer_idx, debug::SectionType::SUPPORT);
+                                           }
                                            Polygons xy_non_overhang_disallowed = outlines.difference(mesh.overhang_areas[layer_idx].unionPolygons(larger_area_below).offset(xy_distance)).offset(xy_distance);
+                                           {
+                                               auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_xy_non_overhang_disallowed", mesh_idx));
+                                               vlogger->log(xy_non_overhang_disallowed, layer_idx, debug::SectionType::SUPPORT);
+                                           }
                                            xy_disallowed_per_layer[layer_idx] = xy_overhang_disallowed.unionPolygons(xy_non_overhang_disallowed.unionPolygons(outlines.offset(xy_distance_overhang)));
+                                           {
+                                               auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_xy_disallowed_per_layer_0", mesh_idx));
+                                               vlogger->log(xy_disallowed_per_layer[layer_idx], layer_idx, debug::SectionType::SUPPORT);
+                                           }
                                        }
                                    }
                                    if (is_support_mesh_place_holder || ! use_xy_distance_overhang)
                                    {
                                        xy_disallowed_per_layer[layer_idx] = outlines.offset(xy_distance);
+                                       {
+                                           auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_xy_disallowed_per_layer_1", mesh_idx));
+                                           vlogger->log(xy_disallowed_per_layer[layer_idx], layer_idx, debug::SectionType::SUPPORT);
+                                       }
                                    }
                                });
 
@@ -986,6 +1034,10 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
                 {
                     sloped_areas_per_layer[layer_idx] = sloped_areas_per_layer[layer_idx].unionPolygons(sloped_areas_per_layer[layer_idx - 1]);
                 }
+                {
+                    auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_sloped_areas_per_layer_1", mesh_idx));
+                    vlogger->log(sloped_areas_per_layer[layer_idx], layer_idx, debug::SectionType::SUPPORT);
+                }
             },
             bottom_stair_step_layer_count);
     }
@@ -993,6 +1045,10 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
     for (size_t layer_idx = layer_count - 1 - layer_z_distance_top; layer_idx != static_cast<size_t>(-1); layer_idx--)
     {
         Polygons layer_this = mesh.full_overhang_areas[layer_idx + layer_z_distance_top];
+        {
+            auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_0", mesh_idx));
+            vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+        }
 
         if (extension_offset && ! is_support_mesh_place_holder)
         {
@@ -1002,6 +1058,10 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
             // the support and next to the model to ensure that the expanded support area is connected to the original
             // support area. Please note that the horizontal expansion is rounded down to an integer offset_per_step.
             Polygons model_outline = storage.getLayerOutlines(layer_idx, no_support, no_prime_tower);
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_model_outline_0", mesh_idx));
+                vlogger->log(model_outline, layer_idx, debug::SectionType::SUPPORT);
+            }
             const coord_t offset_per_step = support_line_width / 2;
             for (coord_t offset_cumulative = 0; offset_cumulative <= extension_offset; offset_cumulative += offset_per_step)
             {
@@ -1010,27 +1070,64 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
                 model_outline = model_outline.offset(offset_per_step);
                 layer_this = layer_this.difference(model_outline);
             }
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_1", mesh_idx));
+                vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+            }
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_model_outline_1", mesh_idx));
+                vlogger->log(model_outline, layer_idx, debug::SectionType::SUPPORT);
+            }
         }
 
         if (use_towers && ! is_support_mesh_place_holder)
         {
             // handle straight walls
             AreaSupport::handleWallStruts(infill_settings, layer_this);
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_2", mesh_idx));
+                vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+            }
             // handle towers
             AreaSupport::handleTowers(infill_settings, storage, layer_this, tower_roofs, mesh.overhang_points, layer_idx, layer_count);
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_3", mesh_idx));
+                vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+            }
         }
 
         if (layer_idx + 1 < layer_count)
         { // join with support from layer up
             const Polygons empty;
             const Polygons* layer_above = (layer_idx < support_areas.size()) ? &support_areas[layer_idx + 1] : &empty;
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_above", mesh_idx));
+                vlogger->log(*layer_above, layer_idx, debug::SectionType::SUPPORT);
+            }
             const Polygons model_mesh_on_layer = (layer_idx > 0) && ! is_support_mesh_nondrop_place_holder ? storage.getLayerOutlines(layer_idx, no_support, no_prime_tower) : empty;
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_model_mesh_on_layer", mesh_idx));
+                vlogger->log(model_mesh_on_layer, layer_idx, debug::SectionType::SUPPORT);
+            }
             if (is_support_mesh_nondrop_place_holder)
             {
                 layer_above = &empty;
                 layer_this = layer_this.unionPolygons(storage.support.supportLayers[layer_idx].support_mesh);
+                {
+                    auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_4", mesh_idx));
+                    vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+                }
             }
-            layer_this = AreaSupport::join(storage, *layer_above, layer_this, smoothing_distance).difference(model_mesh_on_layer);
+            layer_this = AreaSupport::join(storage, *layer_above, layer_this, smoothing_distance, layer_idx, mesh_idx);
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_5", mesh_idx));
+                vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+            }
+            layer_this = layer_this.difference(model_mesh_on_layer);
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_6", mesh_idx));
+                vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+            }
         }
 
         // make towers for small support
@@ -1063,15 +1160,27 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
         if (is_support_mesh_drop_down_place_holder && storage.support.supportLayers[layer_idx].support_mesh_drop_down.size() > 0)
         { // handle support mesh which should be supported by more support
             layer_this = layer_this.unionPolygons(storage.support.supportLayers[layer_idx].support_mesh_drop_down);
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_7", mesh_idx));
+                vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+            }
         }
 
         // Move up from model, handle stair-stepping.
         moveUpFromModel(storage, stair_removal, sloped_areas_per_layer[layer_idx], layer_this, layer_idx, bottom_empty_layer_count, bottom_stair_step_layer_count, bottom_stair_step_width);
+        {
+            auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}layer_this_8", mesh_idx));
+            vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+        }
 
         // inset using X/Y distance
         if (! layer_this.empty())
         {
             layer_this = layer_this.difference(xy_disallowed_per_layer[layer_idx]);
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_9", mesh_idx));
+                vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+            }
         }
 
         support_areas[layer_idx] = layer_this;
@@ -1137,6 +1246,10 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
                                        constexpr bool no_support = false;
                                        constexpr bool no_prime_tower = false;
                                        support_areas[layer_idx] = support_areas[layer_idx].difference(storage.getLayerOutlines(layer_idx + layer_z_distance_top - 1, no_support, no_prime_tower));
+                                       {
+                                            auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_enforce_top_z", mesh_idx));
+                                            vlogger->log(support_areas[layer_idx], layer_idx, debug::SectionType::SUPPORT);
+                                        }
                                    });
     }
 
@@ -1151,6 +1264,10 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage,
             Polygons& layer_above = support_areas[layer_idx + 1];
             Polygons surrounding_layer = layer_above.unionPolygons(layer_below);
             layer_this = layer_this.intersection(surrounding_layer);
+            {
+                auto vlogger = debug::Loggers().Logger(fmt::format("support_mesh_{}_layer_this_10", mesh_idx));
+                vlogger->log(layer_this, layer_idx, debug::SectionType::SUPPORT);
+            }
         }
     }
 

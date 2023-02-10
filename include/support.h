@@ -1,5 +1,5 @@
-//Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+// Copyright (c) 2023 UltiMaker
+// CuraEngine is released under the terms of the AGPLv3 or higher
 
 #ifndef SUPPORT_H
 #define SUPPORT_H
@@ -204,7 +204,7 @@ private:
      * line segment which is to be smoothed out.
      * \return The joined support areas for this layer.
      */
-    static Polygons join(const SliceDataStorage& storage, const Polygons& supportLayer_up, Polygons& supportLayer_this, const coord_t smoothing_distance);
+    static Polygons join(const SliceDataStorage& storage, const Polygons& supportLayer_up, Polygons& supportLayer_this, const coord_t smoothing_distance, const coord_t layer_idx, const coord_t mesh_idx);
 
     /*!
      * Move the support up from model (cut away polygons to ensure bottom z distance)
