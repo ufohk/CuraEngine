@@ -17,7 +17,8 @@ enum class SectionType : int
     IRONING = 6,
     MESH = 7,
     DOTS = 8,
-    CONCENTRIC_INFILL = 9
+    CONCENTRIC_INFILL = 9,
+    MORAL_SUPPORT = 10
 };
 } // namespace cura::debug
 

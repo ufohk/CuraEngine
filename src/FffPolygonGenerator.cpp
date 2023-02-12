@@ -55,6 +55,9 @@
 #include "utils/views/to_shared_ptr.h"
 // clang-format on
 
+#include "utils/visual_debug/logger.h"
+#include <range/v3/all.hpp>
+
 namespace cura
 {
 
@@ -405,6 +408,16 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage, TimeKeeper&
     AreaSupport::generateSupportAreas(storage);
     TreeSupport tree_support_generator(storage);
     tree_support_generator.generateSupportAreas(storage);
+
+    auto vlogger = debug::Loggers().Logger("moral_support_overhangs");
+    for (auto overhang_data : support_areas | ranges::views::keys)
+    {
+        vlogger->log(*overhang_data->outline, overhang_data->layer_idx, debug::SectionType::MORAL_SUPPORT, debug::CellVisualDataInfo{ "area_type", [&]( const auto& val ) { return static_cast<int>(overhang_data->area_type); } } );
+    }
+    for (auto overhang_data : ranges::views::concat(overhangs,  foundations))
+    {
+        vlogger->log(*overhang_data->outline, overhang_data->layer_idx, debug::SectionType::MORAL_SUPPORT, debug::CellVisualDataInfo{ "area_type", [&]( const auto& val ) { return static_cast<int>(overhang_data->area_type); } } );
+    }
 
     // we need to remove empty layers after we have processed the insets
     // processInsets might throw away parts if they have no wall at all (cause it doesn't fit)
