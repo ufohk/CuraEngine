@@ -6,11 +6,13 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
+#include <memory>
 
 #include <fmt/format.h>
 #include <spdlog/cfg/helpers.h>
 #include <spdlog/details/os.h>
 #include <spdlog/sinks/dup_filter_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
 #include "FffProcessor.h"
@@ -22,17 +24,21 @@
 
 namespace cura
 {
-
 Application::Application()
 {
-    auto dup_filter = std::make_shared<spdlog::sinks::dup_filter_sink_st>(std::chrono::seconds(5));
-    spdlog::default_logger()->sinks().push_back(dup_filter);
-    if (isString auto spdlog_val = spdlog::details::os::getenv("CURAENGINE_LOG_LEVEL"); ! spdlog_val.empty())
-    {
-        spdlog::cfg::helpers::load_levels(spdlog_val);
-    }
+	auto dup_sink = std::make_shared<spdlog::sinks::dup_filter_sink_mt>(std::chrono::seconds{ 10 });
+	auto base_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    dup_sink->add_sink(base_sink);
 
+	auto support_logger = spdlog::stdout_color_mt("support");
 
+	spdlog::default_logger()->sinks() = std::vector<std::shared_ptr<spdlog::sinks::sink>>{ dup_sink }; // replace default_logger sinks with the duplicating filtering sink to avoid spamming
+	support_logger->sinks() = std::vector<std::shared_ptr<spdlog::sinks::sink>>{ dup_sink };
+
+	if (isString auto spdlog_val = spdlog::details::os::getenv("CURAENGINE_LOG_LEVEL"); ! spdlog_val.empty())
+	{
+		spdlog::cfg::helpers::load_levels(spdlog_val);
+	}
 }
 
 Application::~Application()
