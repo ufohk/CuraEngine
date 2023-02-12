@@ -26,7 +26,7 @@ namespace cura
 {
 Application::Application()
 {
-	auto dup_sink = std::make_shared<spdlog::sinks::dup_filter_sink_mt>(std::chrono::seconds{ 10 });
+	auto dup_sink = std::make_shared<spdlog::sinks::dup_filter_sink_mt>(std::chrono::seconds{ 3 });
 	auto base_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     dup_sink->add_sink(base_sink);
 
@@ -35,7 +35,7 @@ Application::Application()
 	spdlog::default_logger()->sinks() = std::vector<std::shared_ptr<spdlog::sinks::sink>>{ dup_sink }; // replace default_logger sinks with the duplicating filtering sink to avoid spamming
 	support_logger->sinks() = std::vector<std::shared_ptr<spdlog::sinks::sink>>{ dup_sink };
 
-	if (isString auto spdlog_val = spdlog::details::os::getenv("CURAENGINE_LOG_LEVEL"); ! spdlog_val.empty())
+	if (auto spdlog_val = spdlog::details::os::getenv("CURAENGINE_LOG_LEVEL"); ! spdlog_val.empty())
 	{
 		spdlog::cfg::helpers::load_levels(spdlog_val);
 	}
