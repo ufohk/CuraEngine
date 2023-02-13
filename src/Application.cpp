@@ -31,6 +31,7 @@ Application::Application()
     dup_sink->add_sink(base_sink);
 
 	auto support_logger = spdlog::stdout_color_mt("support");
+	auto visual_debug_logger = spdlog::stdout_color_mt("visual_debug");
 
 	spdlog::default_logger()->sinks() = std::vector<std::shared_ptr<spdlog::sinks::sink>>{ dup_sink }; // replace default_logger sinks with the duplicating filtering sink to avoid spamming
 	support_logger->sinks() = std::vector<std::shared_ptr<spdlog::sinks::sink>>{ dup_sink };

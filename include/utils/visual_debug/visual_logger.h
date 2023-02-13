@@ -63,7 +63,7 @@ public:
     VisualLogger(const std::string& id, const size_t logger_idx, const std::filesystem::path& vtu_path) : enabled_ { true }, id_ { id }, logger_idx_ { logger_idx }, vtu_path_ { vtu_path }
     {
         const std::scoped_lock lock { mutex_ };
-        spdlog::info( "Visual Debugger: Initializing Logger <{}>-<{}> stored in {}", id_, logger_idx_, vtu_path_.string());
+        spdlog::get("visual_debug")->info( "Visual Debugger: Initializing Logger <{}>-<{}> stored in {}", id_, logger_idx_, vtu_path_.string());
         vtu11::writePVtu( vtu_path_.string(), id_, { }, 1 );
     };
 
@@ -335,7 +335,7 @@ private:
     {
         const std::scoped_lock lock { mutex_ };
         const auto idx = idx_++;
-        spdlog::info( "Visual Debugger: <{}>-<{}> writing partition {}", id_, logger_idx_, idx );
+        spdlog::get("visual_debug")->info( "Visual Debugger: <{}>-<{}> writing partition {}", id_, logger_idx_, idx );
         auto dataset_infos = ranges::actions::sort( ranges::views::concat( point_dataset_info_, cell_dataset_info_ ) | ranges::to_vector );
         std::vector<vtu11::DataSetData> data { };
         auto dataset_data = ranges::views::concat( point_data, cell_data ) | ranges::to<mapped_data_t>;
@@ -345,7 +345,7 @@ private:
         }
         if ( !dataset_infos.empty())
         {
-            spdlog::debug( "Visual Debugger: <{}>-<{}> logging: {}", id_, logger_idx_, dataset_infos | ranges::views::transform( [](const auto& dsi) { return std::get<0>( dsi ); } ));
+            spdlog::get("visual_debug")->debug( "Visual Debugger: <{}>-<{}> logging: {}", id_, logger_idx_, dataset_infos | ranges::views::transform( [](const auto& dsi) { return std::get<0>( dsi ); } ));
         }
         vtu11::writePartition( vtu_path_.string(), id_, mesh_partition, dataset_infos, data, idx, "rawbinarycompressed" );
         vtu11::writePVtu( vtu_path_.string(), id_, dataset_infos, idx_ );  // Make sure it is up to date

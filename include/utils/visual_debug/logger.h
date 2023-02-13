@@ -46,7 +46,7 @@ private:
     {
         if ( enabled_ )
         {
-            spdlog::info( "Creating logger: {}", id );
+            spdlog::get("visual_debug")->info( "Creating logger: {}", id );
             if ( !loggers_.contains( id ))
             {
                 loggers_.emplace( id, std::make_shared<VisualLogger>( id, loggers_.size(), VisualDebugPath(), std::forward<Args>( args )... ));
@@ -97,7 +97,7 @@ private:
         auto vtu_path = vtu_dir.empty() ? fs::current_path().append( fmt::format( "visual_debug/{}", now_ )) : fs::path( vtu_dir ).append( now_ );
         if ( !fs::exists( vtu_path ))
         {
-            spdlog::info( "Creating directories for Visual Debugger: {}", vtu_path.string());
+            spdlog::get("visual_debug")->info( "Creating directories for Visual Debugger: {}", vtu_path.string());
             fs::create_directories( vtu_path );
         }
         return vtu_path;
