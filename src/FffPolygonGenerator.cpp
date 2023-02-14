@@ -402,7 +402,7 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage, TimeKeeper&
     auto shared_meshes = storage.meshes | views::to_shared_ptr | ranges::to_vector;
     auto overhangs = shared_meshes | support::views::supportable_meshes | support::views::meshes_overhangs;
     auto foundations = shared_meshes | support::views::foundationable_meshes | support::views::meshes_foundations;
-    auto support_areas = support::actions::drop_down(overhangs, foundations);// | ranges::to<support::support_area_graph_t>;
+    auto support_areas = support::actions::drop_down(overhangs, foundations);
     auto joined_areas = support::actions::join_areas(support_areas);
 
     AreaSupport::generateOverhangAreas(storage);
@@ -411,7 +411,8 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage, TimeKeeper&
     tree_support_generator.generateSupportAreas(storage);
 
     auto vlogger = debug::Loggers().Logger("moral_support_overhangs");
-    for (auto overhang_data : support_areas | ranges::views::keys)
+    auto visual_areas = ranges::actions::sort(joined_areas | ranges::views::keys | ranges::to_vector);
+    for (auto overhang_data : visual_areas | ranges::views::unique)
     {
         vlogger->log(*overhang_data->outline, overhang_data->layer_idx, debug::SectionType::MORAL_SUPPORT, debug::CellVisualDataInfo{ "area_type", [&]( const auto& val ) { return static_cast<int>(overhang_data->area_type); } } );
     }
